@@ -1,6 +1,5 @@
 package proyecto_v;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Scanner;
 
@@ -102,11 +101,17 @@ public class menu {
     }
 
     private static Recibo leerRecibo(Scanner consola) {
-        System.out.print("Producto pedido: ");
-        String producto = consola.nextLine();
+        System.out.println("Productos disponibles:");
+        for (CatalogoProducto.ProductoCatalogo producto : CatalogoProducto.obtenerProductos()) {
+            System.out.println("- " + producto.getCodigo() + " | " + producto.getNombre()
+                    + " | $" + producto.getPrecioUnitario());
+        }
 
-        System.out.print("Precio: ");
-        BigDecimal precio = new BigDecimal(consola.nextLine());
+        System.out.print("Codigo del producto: ");
+        String codigoProducto = consola.nextLine();
+
+        System.out.print("Cantidad: ");
+        String cantidad = consola.nextLine();
 
         System.out.print("Documento de quien pidio: ");
         String documento = consola.nextLine();
@@ -114,7 +119,7 @@ public class menu {
         System.out.print("Nombre de quien pidio: ");
         String nombre = consola.nextLine();
 
-        return new Recibo(producto, precio, documento, nombre);
+        return PedidoService.crearRecibo(codigoProducto, "", cantidad, documento, nombre);
     }
 
     private static void mostrarRecibos(List<Recibo> recibos) {

@@ -2,6 +2,7 @@
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Locale" %>
+<%@ page import="proyecto_v.CatalogoProducto" %>
 <%@ page import="proyecto_v.Recibo" %>
 <%@ page import="proyecto_v.ReciboDao" %>
 
@@ -27,7 +28,18 @@
     String contextPath = request.getContextPath();
     ReciboDao reciboDao = new ReciboDao();
     List<Recibo> recibos = reciboDao.obtenerTodos();
+    List<CatalogoProducto.ProductoCatalogo> catalogo = CatalogoProducto.obtenerProductos();
     NumberFormat moneda = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+    String codigoPedido = request.getParameter("CodigoProducto");
+    if (codigoPedido == null) {
+        codigoPedido = "";
+    }
+    String cantidadPedido = request.getParameter("Cantidad");
+    if (cantidadPedido == null || cantidadPedido.isEmpty()) {
+        cantidadPedido = "1";
+    }
+    String tipoMensaje = request.getParameter("tipo");
+    String mensaje = request.getParameter("mensaje");
 %>
 
 <!DOCTYPE html>
@@ -100,6 +112,13 @@
                         </li>
                     </ul>
 
+                    <% if (mensaje != null && !mensaje.isEmpty()) { %>
+                    <div class="alert alert-<%= "error".equals(tipoMensaje) ? "danger" : "success" %> alert-dismissible fade show" role="alert">
+                        <%= safe(mensaje) %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                    <% } %>
+
                     <% if (action.equals("registro")) { %>
                     <div class="row gx-5 justify-content-center">
                         <div class="col-lg-8">
@@ -108,11 +127,36 @@
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label for="regProducto" class="form-label">Producto pedido</label>
-                                            <input type="text" class="form-control" id="regProducto" name="Producto" placeholder="Manguera industrial" required>
+                                            <select class="form-select product-select" id="regProducto" name="CodigoProducto" required
+                                                    data-product-target="regProductoNombre"
+                                                    data-price-target="regPrecioUnitario"
+                                                    data-quantity-target="regCantidad"
+                                                    data-total-target="regPrecio">
+                                                <option value="" disabled <%= codigoPedido.isEmpty() ? "selected" : "" %>>Selecciona un producto</option>
+                                                <% for (CatalogoProducto.ProductoCatalogo p : catalogo) { %>
+                                                <option value="<%= p.getCodigo() %>"
+                                                        data-nombre="<%= safe(p.getNombre()) %>"
+                                                        data-precio="<%= p.getPrecioUnitario() %>"
+                                                        <%= p.getCodigo().equals(codigoPedido) ? "selected" : "" %>>
+                                                    <%= safe(p.getNombre()) %> - <%= moneda.format(p.getPrecioUnitario()) %>
+                                                </option>
+                                                <% } %>
+                                            </select>
+                                            <input type="hidden" id="regProductoNombre" name="Producto">
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="regPrecio" class="form-label">Precio</label>
-                                            <input type="number" class="form-control" id="regPrecio" name="Precio" min="0" step="0.01" placeholder="150000" required>
+                                            <label for="regCantidad" class="form-label">Cantidad</label>
+                                            <input type="number" class="form-control quantity-input" id="regCantidad" name="Cantidad" min="1" max="999" step="1" value="<%= safe(cantidadPedido) %>" required
+                                                   data-select-target="regProducto"
+                                                   data-total-target="regPrecio">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="regPrecioUnitario" class="form-label">Precio unitario</label>
+                                            <input type="number" class="form-control" id="regPrecioUnitario" name="PrecioUnitario" min="0" step="0.01" readonly required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="regPrecio" class="form-label">Total del pedido</label>
+                                            <input type="number" class="form-control" id="regPrecio" name="Precio" min="0" step="0.01" readonly required>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="regDocumento" class="form-label">Documento</label>
@@ -143,8 +187,15 @@
                                             <select class="form-select" id="modId" name="reciboId" required>
                                                 <option value="" disabled selected>Selecciona un recibo</option>
                                                 <% for (Recibo r : recibos) { %>
+                                                <%
+                                                    CatalogoProducto.ProductoCatalogo productoRecibo = CatalogoProducto.buscarPorNombre(r.getProducto());
+                                                    String codigoRecibo = productoRecibo == null ? "" : productoRecibo.getCodigo();
+                                                %>
                                                 <option value="<%= r.getId() %>"
+                                                        data-codigo="<%= safe(codigoRecibo) %>"
                                                         data-producto="<%= safe(r.getProducto()) %>"
+                                                        data-cantidad="<%= r.getCantidad() %>"
+                                                        data-precio-unitario="<%= r.getPrecioUnitario() %>"
                                                         data-precio="<%= r.getPrecio() %>"
                                                         data-documento="<%= safe(r.getDocumento()) %>"
                                                         data-nombre="<%= safe(r.getNombre()) %>">
@@ -155,11 +206,35 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label for="modProducto" class="form-label">Producto pedido</label>
-                                            <input type="text" class="form-control" id="modProducto" name="Producto" required>
+                                            <select class="form-select product-select" id="modProducto" name="CodigoProducto" required
+                                                    data-product-target="modProductoNombre"
+                                                    data-price-target="modPrecioUnitario"
+                                                    data-quantity-target="modCantidad"
+                                                    data-total-target="modPrecio">
+                                                <option value="" disabled selected>Selecciona un producto</option>
+                                                <% for (CatalogoProducto.ProductoCatalogo p : catalogo) { %>
+                                                <option value="<%= p.getCodigo() %>"
+                                                        data-nombre="<%= safe(p.getNombre()) %>"
+                                                        data-precio="<%= p.getPrecioUnitario() %>">
+                                                    <%= safe(p.getNombre()) %> - <%= moneda.format(p.getPrecioUnitario()) %>
+                                                </option>
+                                                <% } %>
+                                            </select>
+                                            <input type="hidden" id="modProductoNombre" name="Producto">
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="modPrecio" class="form-label">Precio</label>
-                                            <input type="number" class="form-control" id="modPrecio" name="Precio" min="0" step="0.01" required>
+                                            <label for="modCantidad" class="form-label">Cantidad</label>
+                                            <input type="number" class="form-control quantity-input" id="modCantidad" name="Cantidad" min="1" max="999" step="1" required
+                                                   data-select-target="modProducto"
+                                                   data-total-target="modPrecio">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="modPrecioUnitario" class="form-label">Precio unitario</label>
+                                            <input type="number" class="form-control" id="modPrecioUnitario" name="PrecioUnitario" min="0" step="0.01" readonly required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="modPrecio" class="form-label">Total del pedido</label>
+                                            <input type="number" class="form-control" id="modPrecio" name="Precio" min="0" step="0.01" readonly required>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="modDocumento" class="form-label">Documento</label>
@@ -183,7 +258,7 @@
                     <div class="row gx-5 justify-content-center">
                         <div class="col-lg-8">
                             <div class="bg-light rounded-3 py-5 px-4 px-md-5">
-                                <form action="<%= contextPath %>/eliminar" method="POST" onsubmit="return confirm('¿Eliminar este recibo definitivamente?');">
+                                <form action="<%= contextPath %>/eliminar" method="POST" onsubmit="return confirm('Eliminar este recibo definitivamente?');">
                                     <div class="row g-3">
                                         <div class="col-12">
                                             <label for="elimId" class="form-label">Recibo a eliminar</label>
@@ -221,7 +296,9 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Producto</th>
-                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio unitario</th>
+                                    <th>Total</th>
                                     <th>Documento</th>
                                     <th>Nombre</th>
                                 </tr>
@@ -229,13 +306,15 @@
                             <tbody>
                                 <% if (recibos.isEmpty()) { %>
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">No hay recibos registrados.</td>
+                                    <td colspan="7" class="text-center text-muted py-4">No hay recibos registrados.</td>
                                 </tr>
                                 <% } else { %>
                                     <% for (Recibo r : recibos) { %>
                                     <tr>
                                         <td><span class="badge bg-dark">#<%= r.getId() %></span></td>
                                         <td class="fw-semibold"><%= safe(r.getProducto()) %></td>
+                                        <td><%= r.getCantidad() %></td>
+                                        <td><%= moneda.format(r.getPrecioUnitario()) %></td>
                                         <td><%= moneda.format(r.getPrecio()) %></td>
                                         <td><%= safe(r.getDocumento()) %></td>
                                         <td><%= safe(r.getNombre()) %></td>
@@ -260,21 +339,77 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="<%= contextPath %>/js/scripts.js"></script>
         <script>
-            const select = document.getElementById("modId");
-            const producto = document.getElementById("modProducto");
-            const precio = document.getElementById("modPrecio");
-            const documento = document.getElementById("modDocumento");
-            const nombre = document.getElementById("modNombre");
+            (() => {
+                const money = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" });
 
-            if (select && producto && precio && documento && nombre) {
-                select.addEventListener("change", () => {
-                    const op = select.options[select.selectedIndex];
-                    producto.value = op.dataset.producto || "";
-                    precio.value = op.dataset.precio || "";
-                    documento.value = op.dataset.documento || "";
-                    nombre.value = op.dataset.nombre || "";
+                function updatePedido(select) {
+                    if (!select) {
+                        return;
+                    }
+                    const option = select.options[select.selectedIndex];
+                    const quantity = document.getElementById(select.dataset.quantityTarget);
+                    const price = document.getElementById(select.dataset.priceTarget);
+                    const total = document.getElementById(select.dataset.totalTarget);
+                    const productName = document.getElementById(select.dataset.productTarget);
+                    const unitPrice = option ? Number(option.dataset.precio || 0) : 0;
+                    const quantityValue = Math.max(1, Number.parseInt(quantity?.value || "1", 10) || 1);
+
+                    if (quantity) {
+                        quantity.value = quantityValue;
+                    }
+                    if (productName) {
+                        productName.value = option?.dataset.nombre || "";
+                    }
+                    if (price) {
+                        price.value = unitPrice ? unitPrice.toFixed(2) : "";
+                        price.title = unitPrice ? money.format(unitPrice) : "";
+                    }
+                    if (total) {
+                        const totalValue = unitPrice * quantityValue;
+                        total.value = totalValue ? totalValue.toFixed(2) : "";
+                        total.title = totalValue ? money.format(totalValue) : "";
+                    }
+                }
+
+                document.querySelectorAll(".product-select").forEach((select) => {
+                    select.addEventListener("change", () => updatePedido(select));
+                    if (select.value) {
+                        updatePedido(select);
+                    }
                 });
-            }
+
+                document.querySelectorAll(".quantity-input").forEach((quantity) => {
+                    quantity.addEventListener("input", () => updatePedido(document.getElementById(quantity.dataset.selectTarget)));
+                });
+
+                const reciboSelect = document.getElementById("modId");
+                if (reciboSelect) {
+                    reciboSelect.addEventListener("change", () => {
+                        const option = reciboSelect.options[reciboSelect.selectedIndex];
+                        const producto = document.getElementById("modProducto");
+                        document.getElementById("modCantidad").value = option.dataset.cantidad || "1";
+                        document.getElementById("modDocumento").value = option.dataset.documento || "";
+                        document.getElementById("modNombre").value = option.dataset.nombre || "";
+                        producto.value = option.dataset.codigo || "";
+                        updatePedido(producto);
+                    });
+                }
+
+                document.querySelectorAll("form[action$='/registrar'], form[action$='/actualizar']").forEach((form) => {
+                    form.addEventListener("submit", (event) => {
+                        const select = form.querySelector(".product-select");
+                        const quantity = form.querySelector(".quantity-input");
+                        if (!select.value || Number(quantity.value) < 1) {
+                            event.preventDefault();
+                            alert("Selecciona un producto y una cantidad valida.");
+                            return;
+                        }
+                        if (!confirm("Confirmar este pedido?")) {
+                            event.preventDefault();
+                        }
+                    });
+                });
+            })();
         </script>
     </body>
 </html>

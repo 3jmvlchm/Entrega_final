@@ -6,6 +6,8 @@ public class Recibo {
 
     private int id;
     private String producto;
+    private BigDecimal precioUnitario;
+    private int cantidad = 1;
     private BigDecimal precio;
     private String documento;
     private String nombre;
@@ -16,6 +18,7 @@ public class Recibo {
     public Recibo(String producto, BigDecimal precio, String documento, String nombre) {
         this.producto = producto;
         this.precio = precio;
+        this.precioUnitario = precio;
         this.documento = documento;
         this.nombre = nombre;
     }
@@ -23,6 +26,26 @@ public class Recibo {
     public Recibo(int id, String producto, BigDecimal precio, String documento, String nombre) {
         this.id = id;
         this.producto = producto;
+        this.precio = precio;
+        this.precioUnitario = precio;
+        this.documento = documento;
+        this.nombre = nombre;
+    }
+
+    public Recibo(String producto, BigDecimal precioUnitario, int cantidad, BigDecimal precio, String documento, String nombre) {
+        this.producto = producto;
+        this.precioUnitario = precioUnitario;
+        this.cantidad = cantidad;
+        this.precio = precio;
+        this.documento = documento;
+        this.nombre = nombre;
+    }
+
+    public Recibo(int id, String producto, BigDecimal precioUnitario, int cantidad, BigDecimal precio, String documento, String nombre) {
+        this.id = id;
+        this.producto = producto;
+        this.precioUnitario = precioUnitario;
+        this.cantidad = cantidad;
         this.precio = precio;
         this.documento = documento;
         this.nombre = nombre;
@@ -42,6 +65,22 @@ public class Recibo {
 
     public void setProducto(String producto) {
         this.producto = producto;
+    }
+
+    public BigDecimal getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    public void setPrecioUnitario(BigDecimal precioUnitario) {
+        this.precioUnitario = precioUnitario;
+    }
+
+    public int getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(int cantidad) {
+        this.cantidad = cantidad;
     }
 
     public BigDecimal getPrecio() {
@@ -73,6 +112,8 @@ public class Recibo {
         return "Recibo{"
                 + "id=" + id
                 + ", producto='" + producto + '\''
+                + ", precioUnitario=" + precioUnitario
+                + ", cantidad=" + cantidad
                 + ", precio=" + precio
                 + ", documento='" + documento + '\''
                 + ", nombre='" + nombre + '\''

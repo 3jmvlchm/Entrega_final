@@ -4,6 +4,8 @@ USE bdprueba;
 CREATE TABLE IF NOT EXISTS recibos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     producto VARCHAR(150) NOT NULL,
+    cantidad INT NOT NULL DEFAULT 1,
+    precio_unitario DECIMAL(12,2) NOT NULL,
     precio DECIMAL(12,2) NOT NULL,
     documento VARCHAR(30) NOT NULL,
     nombre VARCHAR(120) NOT NULL,

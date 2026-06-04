@@ -6,6 +6,8 @@
 package proyecto_v.servlet;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -41,8 +43,18 @@ public class Eliminar extends HttpServlet {
             ReciboDao reciboDao = new ReciboDao();
             reciboDao.eliminar(id);
             response.setContentType("text/html;charset=UTF-8");
-            response.sendRedirect(request.getContextPath() + "/index.jsp?action=mostrar");
+            response.sendRedirect(request.getContextPath()
+                    + "/index.jsp?action=mostrar&tipo=exito&mensaje="
+                    + encode("Pedido eliminado correctamente.")
+                    + "#listado");
 
+    }
+
+    private String encode(String value) {
+        if (value == null || value.isEmpty()) {
+            value = "No se pudo procesar el pedido.";
+        }
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
 }

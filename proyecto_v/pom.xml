@@ -15,8 +15,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>25</maven.compiler.source>
-    <maven.compiler.target>25</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <jetty.http.port>8080</jetty.http.port>
   </properties>
 
   <dependencies>
@@ -98,6 +99,20 @@
         <plugin>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.4.0</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.eclipse.jetty.ee10</groupId>
+          <artifactId>jetty-ee10-maven-plugin</artifactId>
+          <version>12.0.15</version>
+          <configuration>
+            <httpConnector>
+              <port>${jetty.http.port}</port>
+            </httpConnector>
+            <webApp>
+              <contextPath>/proyecto_v_Base</contextPath>
+            </webApp>
+          </configuration>
         </plugin>
 
 

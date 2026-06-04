@@ -6,7 +6,8 @@
 package proyecto_v.servlet;
 
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import proyecto_v.Recibo;
 import proyecto_v.ReciboDao;
+import proyecto_v.ReciboFormulario;
 
 /**
  *
@@ -38,19 +40,32 @@ public class Actualizar extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
                 throws ServletException, IOException {
             request.setCharacterEncoding("UTF-8");
-            int id = Integer.parseInt(request.getParameter("reciboId"));
-            Recibo recibo = new Recibo();
-            recibo.setId(id);
-            recibo.setProducto(request.getParameter("Producto"));
-            recibo.setPrecio(new BigDecimal(request.getParameter("Precio")));
-            recibo.setDocumento(request.getParameter("Documento"));
-            recibo.setNombre(request.getParameter("Nombre"));
-
-            ReciboDao reciboDao = new ReciboDao();
-            reciboDao.actualizar(recibo);
             response.setContentType("text/html;charset=UTF-8");
-            response.sendRedirect(request.getContextPath() + "/index.jsp?action=mostrar");
+            try {
+                int id = Integer.parseInt(request.getParameter("reciboId"));
+                Recibo recibo = ReciboFormulario.leer(request);
+                recibo.setId(id);
 
+                ReciboDao reciboDao = new ReciboDao();
+                reciboDao.actualizar(recibo);
+                response.sendRedirect(request.getContextPath()
+                        + "/index.jsp?action=mostrar&tipo=exito&mensaje="
+                        + encode("Pedido actualizado correctamente.")
+                        + "#listado");
+            } catch (RuntimeException e) {
+                response.sendRedirect(request.getContextPath()
+                        + "/index.jsp?action=actualizar&tipo=error&mensaje="
+                        + encode(e.getMessage())
+                        + "#recibos");
+            }
+
+    }
+
+    private String encode(String value) {
+        if (value == null || value.isEmpty()) {
+            value = "No se pudo procesar el pedido.";
+        }
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
 }
