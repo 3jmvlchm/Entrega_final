@@ -1,0 +1,20 @@
+links sustentación técnicas:
+http://localhost:8080/proyecto_v_Base/
+
+cd "C:\MARCOS\entregafinaltecnicas\proyecto_v"
+
+mvn clean package
+
+Stop-Service Tomcat11 -ErrorAction SilentlyContinue
+
+if (Test-Path "C:\Program Files\Apache Software Foundation\Tomcat 11.0\webapps\proyecto_v_Base") {
+    Remove-Item -Recurse -Force "C:\Program Files\Apache Software Foundation\Tomcat 11.0\webapps\proyecto_v_Base"
+}
+
+if (Test-Path "C:\Program Files\Apache Software Foundation\Tomcat 11.0\webapps\proyecto_v_Base.war") {
+    Remove-Item -Force "C:\Program Files\Apache Software Foundation\Tomcat 11.0\webapps\proyecto_v_Base.war"
+}
+
+Copy-Item ".\target\proyecto_v_Base.war" "C:\Program Files\Apache Software Foundation\Tomcat 11.0\webapps\proyecto_v_Base.war" -Force
+
+Start-Service Tomcat11
